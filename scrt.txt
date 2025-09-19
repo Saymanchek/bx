@@ -297,7 +297,9 @@ end
 ------------- GUI INTERFACE -------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "SpecterFarmGUI"
-ScreenGui.Parent = game:GetService("CoreGui")
+ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")  -- FIX FOR MOBILE
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 300, 0, 200)
