@@ -1,10 +1,15 @@
--- defaults
+-- optional defaults (set before running)
 _G.Keybind = _G.Keybind or "t"
 _G.observationCD = _G.observationCD or 0.5
 
-local scrt = (function()
-local ok, err = pcall(scrt)
-if not ok then warn("scrt error:", err) end
+-- if the executor doesn't provide a 'script' Instance, create a harmless stub
+if not script then
+    script = {}
+    function script:Destroy() end
+end
+
+-- put the exact contents of scrt.lua as a string (the file returns a function)
+local code = [==[
 return function()
 -- SPECTER MELEE NO-CLIP FARMER v3.1
 -- [AUTHORIZED FOR EDUCATIONAL PURPOSES ONLY]
@@ -465,8 +470,24 @@ UpdateGUI()
 -- Start main loop
 coroutine.wrap(MainFarmLoop)()
 end
+]==]
 
+-- compile
+local chunk, compileErr = loadstring(code)
+if not chunk then
+    warn("Loadstring compile error:", compileErr)
+    return
+end
 
-end)()
+-- run the chunk (it returns the inner function)
+local ok, returned = pcall(chunk)
+if not ok then
+    warn("Chunk runtime error:", returned)
+    return
+end
 
-
+-- 'returned' should be the function returned by the file; call it safely
+local ok2, runErr = pcall(returned)
+if not ok2 then
+    warn("Script runtime error:", runErr)
+end
