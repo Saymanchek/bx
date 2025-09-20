@@ -1,4 +1,10 @@
+-- defaults
+_G.Keybind = _G.Keybind or "t"
+_G.observationCD = _G.observationCD or 0.5
+
 local scrt = (function()
+local ok, err = pcall(scrt)
+if not ok then warn("scrt error:", err) end
 return function()
 -- SPECTER MELEE NO-CLIP FARMER v3.1
 -- [AUTHORIZED FOR EDUCATIONAL PURPOSES ONLY]
@@ -459,7 +465,8 @@ UpdateGUI()
 -- Start main loop
 coroutine.wrap(MainFarmLoop)()
 end
+
+
 end)()
 
-scrt()
 
