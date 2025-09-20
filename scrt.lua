@@ -1,3 +1,4 @@
+local scrt = (function()
 return function()
 -- SPECTER MELEE NO-CLIP FARMER v3.1
 -- [AUTHORIZED FOR EDUCATIONAL PURPOSES ONLY]
@@ -458,3 +459,7 @@ UpdateGUI()
 -- Start main loop
 coroutine.wrap(MainFarmLoop)()
 end
+end)()
+
+scrt()
+
