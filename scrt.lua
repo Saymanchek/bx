@@ -1,168 +1,152 @@
---!strict
--- BLOX FRUITS MOON & MIRAGE CHECKER WITH GUI, WEBHOOK & CLOSE BUTTON
--- [LOADSTRING READY]
+-- LOADSTRING-FRIENDLY GUI WRAPPER WITH STATUS NOTIFICATION
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local Workspace = game:GetService("Workspace")
-local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+local url = "https://discord.com/api/webhooks/1419147952441659443/dIRrwy1GIBYU6S2CsAapfdy37ZILtQXKdARz9Kzcmc7WDvF32McPxmaMzh-_cNWrg_Ru"
+local running = false
+local loopTask = nil
 
--- Webhook URL
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1419147952441659443/dIRrwy1GIBYU6S2CsAapfdy37ZILtQXKdARz9Kzcmc7WDvF32McPxmaMzh-_cNWrg_Ru"
+-- === ORIGINAL FUNCTIONALITY ===
+local Moon = game:GetService("Lighting").Sky.MoonTextureId
+local map = game:GetService("Workspace").Map:GetChildren()
+local Moonstatus = ""
+local MirageStatus = ""
 
--- Script State
-local ScriptEnabled = false
-local MoonStatus = "False"
-local MirageStatus = "False"
-local ScriptClosed = false
-
--- GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MoonMirageGUI"
-ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
--- Main Frame
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 140)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -70)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-MainFrame.BorderSizePixel = 0
-MainFrame.Visible = true
-MainFrame.Parent = ScreenGui
-MainFrame.Active = true
-MainFrame.Draggable = true
-
--- Title
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -30, 0, 25)
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.Text = "Moon & Mirage Checker"
-Title.TextColor3 = Color3.fromRGB(0, 255, 200)
-Title.Font = Enum.Font.Code
-Title.TextScaled = true
-Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-Title.Parent = MainFrame
-
--- Close Button
-local CloseButton = Instance.new("TextButton")
-CloseButton.Size = UDim2.new(0, 25, 0, 25)
-CloseButton.Position = UDim2.new(1, -25, 0, 0)
-CloseButton.Text = "X"
-CloseButton.BackgroundColor3 = Color3.fromRGB(150,0,0)
-CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
-CloseButton.Font = Enum.Font.SourceSansBold
-CloseButton.TextScaled = true
-CloseButton.Parent = MainFrame
-CloseButton.BorderSizePixel = 0
-
--- Status Label
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, -20, 0, 25)
-StatusLabel.Position = UDim2.new(0, 10, 0, 40)
-StatusLabel.Text = "Status: OFF"
-StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-StatusLabel.Font = Enum.Font.RobotoMono
-StatusLabel.TextScaled = true
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Parent = MainFrame
-
--- Toggle Button
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Size = UDim2.new(0, 120, 0, 35)
-ToggleButton.Position = UDim2.new(0.5, -60, 1, -40)
-ToggleButton.Text = "TURN ON"
-ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Font = Enum.Font.RobotoMono
-ToggleButton.TextScaled = true
-ToggleButton.Parent = MainFrame
-
--- Show/Hide Button (round, bottom center)
-local ShowHideButton = Instance.new("TextButton")
-ShowHideButton.Size = UDim2.new(0, 60, 0, 60)
-ShowHideButton.Position = UDim2.new(0.5, -30, 1, -70)
-ShowHideButton.Text = "▲"
-ShowHideButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
-ShowHideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ShowHideButton.Font = Enum.Font.RobotoMono
-ShowHideButton.TextScaled = true
-ShowHideButton.TextWrapped = true
-ShowHideButton.Parent = ScreenGui
-ShowHideButton.BorderSizePixel = 0
-
--- Function to send webhook
-local function SendWebhook(message)
-    if WEBHOOK_URL == "" then return end
-    local data = {
-        ["content"] = message
+local function Webhook(url,IsMirage,IsFullMoon,msgTitle)
+    local msg = {
+        ["content"] = "@everyone",
+        ["embeds"] = {{
+            ["color"] = tonumber(0x000000),
+            ["title"] = msgTitle or "Webhook ngu cac",
+            ["fields"] = {
+                {["name"]="Username", ["value"]="||"..game.Players.LocalPlayer.Name.."||", ["inline"]=false},
+                {["name"]="Mirage Island:", ["value"]=IsMirage, ["inline"]=false},
+                {["name"]="FullMoon:", ["value"]=IsFullMoon, ["inline"]=false},
+                {["name"]="JobId:", ["value"]=game.JobId, ["inline"]=false},
+                {["name"]="Script:", ["value"]='game:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport","'..game.JobId..'")', ["inline"]=false},
+            },
+            ["footer"]={["icon_url"]="", ["text"]="Blox Fruit Checking From IceLion32#7923"}
+        }}
     }
     syn.request({
-        Url = WEBHOOK_URL,
+        Url = url,
         Method = "POST",
-        Headers = {["Content-Type"] = "application/json"},
-        Body = HttpService:JSONEncode(data)
+        Headers = {["Content-Type"]="application/json"},
+        Body = game:GetService("HttpService"):JSONEncode(msg)
     })
 end
 
--- Toggle script
-ToggleButton.MouseButton1Click:Connect(function()
-    if ScriptClosed then return end
-    ScriptEnabled = not ScriptEnabled
-    if ScriptEnabled then
-        ToggleButton.Text = "TURN OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(150,0,0)
-        StatusLabel.Text = "Status: RUNNING"
-        SendWebhook("Moon & Mirage script is now **RUNNING** for "..LocalPlayer.Name)
-    else
-        ToggleButton.Text = "TURN ON"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(0,150,100)
-        StatusLabel.Text = "Status: OFF"
-        SendWebhook("Moon & Mirage script is now **OFF** for "..LocalPlayer.Name)
-    end
-end)
-
--- Show/Hide GUI
-ShowHideButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-    ShowHideButton.Text = MainFrame.Visible and "▲" or "▼"
-end)
-
--- Close GUI and stop script
-CloseButton.MouseButton1Click:Connect(function()
-    ScriptEnabled = false
-    ScriptClosed = true
-    ScreenGui:Destroy()
-    SendWebhook("Moon & Mirage script has been **CLOSED** for "..LocalPlayer.Name)
-end)
-
--- Main loop
-coroutine.wrap(function()
-    while not ScriptClosed do
-        if ScriptEnabled then
-            -- Check Moon
-            if Lighting:FindFirstChild("Sky") then
-                if Lighting.Sky.MoonTextureId == "http://www.roblox.com/asset/?id=9709149431" then
-                    MoonStatus = "True"
-                else
-                    MoonStatus = "False"
-                end
-            end
-
-            -- Check Mirage
-            MirageStatus = "False"
-            for _,v in pairs(Workspace.Map:GetChildren()) do
-                if v.Name == "MysticIsland" then
-                    MirageStatus = "True"
-                end
-            end
-
-            if MoonStatus=="True" or MirageStatus=="True" then
-                SendWebhook("Moon: "..MoonStatus.." | Mirage: "..MirageStatus.." | Player: "..LocalPlayer.Name)
+local function Loop()
+    while running do
+        if Moon == "http://www.roblox.com/asset/?id=9709149431" then
+            Moonstatus = "True"
+        else
+            Moonstatus = "False"
+        end
+        for i,v in pairs(map) do
+            if v.Name == "MysticIsland" then
+                MirageStatus = "True"
+            else
+                MirageStatus = "False"
             end
         end
-        task.wait(5)
+        if MirageStatus=="True" or Moonstatus == "True" then
+            Webhook(url,MirageStatus,Moonstatus)
+        end
+        task.wait(1)
     end
-end)()
+end
+
+-- === GUI ===
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BloxCheckGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 120)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -60)
+Frame.BackgroundColor3 = Color3.fromRGB(25,25,30)
+Frame.Active = true
+Frame.Draggable = true
+Frame.Parent = ScreenGui
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1,0,0,30)
+Title.Position = UDim2.new(0,0,0,0)
+Title.Text = "Blox Fruits Moon/Mirage Checker"
+Title.TextColor3 = Color3.fromRGB(0,255,200)
+Title.BackgroundColor3 = Color3.fromRGB(15,15,20)
+Title.Font = Enum.Font.Code
+Title.TextScaled = true
+Title.Parent = Frame
+
+-- Status Label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1,0,0,25)
+StatusLabel.Position = UDim2.new(0,0,0,35)
+StatusLabel.Text = "Status: OFF"
+StatusLabel.TextColor3 = Color3.fromRGB(255,255,255)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.TextScaled = true
+StatusLabel.Parent = Frame
+
+-- Toggle Button
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0,120,0,30)
+ToggleBtn.Position = UDim2.new(0.5,-60,0,65)
+ToggleBtn.Text = "ON"
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,150,100)
+ToggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+ToggleBtn.Font = Enum.Font.RobotoMono
+ToggleBtn.TextScaled = true
+ToggleBtn.Parent = Frame
+
+-- Show/Hide Button (round, bottom)
+local ShowHideBtn = Instance.new("TextButton")
+ShowHideBtn.Size = UDim2.new(0,50,0,50)
+ShowHideBtn.Position = UDim2.new(0.5,-25,1,0)
+ShowHideBtn.AnchorPoint = Vector2.new(0.5,0)
+ShowHideBtn.Text = "▲"
+ShowHideBtn.BackgroundColor3 = Color3.fromRGB(50,50,55)
+ShowHideBtn.TextColor3 = Color3.fromRGB(0,255,200)
+ShowHideBtn.TextScaled = true
+ShowHideBtn.BorderSizePixel = 0
+ShowHideBtn.Parent = Frame
+
+-- Close Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0,25,0,25)
+CloseBtn.Position = UDim2.new(1,-30,0,5)
+CloseBtn.Text = "X"
+CloseBtn.TextColor3 = Color3.fromRGB(255,0,0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(25,25,30)
+CloseBtn.Font = Enum.Font.RobotoMono
+CloseBtn.TextScaled = true
+CloseBtn.Parent = Frame
+
+-- === GUI LOGIC ===
+ToggleBtn.MouseButton1Click:Connect(function()
+    running = not running
+    if running then
+        StatusLabel.Text = "Status: ON"
+        Webhook(url,"N/A","N/A","Script Turned ON") -- Notify Discord
+        loopTask = coroutine.wrap(Loop)()
+        loopTask()
+        ToggleBtn.Text = "OFF"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    else
+        StatusLabel.Text = "Status: OFF"
+        Webhook(url,"N/A","N/A","Script Turned OFF") -- Notify Discord
+        ToggleBtn.Text = "ON"
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(0,150,100)
+    end
+end)
+
+ShowHideBtn.MouseButton1Click:Connect(function()
+    Frame.Visible = not Frame.Visible
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    running = false
+    Webhook(url,"N/A","N/A","Script Closed") -- Notify Discord
+    ScreenGui:Destroy()
+end)
