@@ -1,5 +1,5 @@
 --!strict
--- BLOX FRUITS MOON & MIRAGE CHECKER WITH GUI & WEBHOOK
+-- BLOX FRUITS MOON & MIRAGE CHECKER WITH GUI, WEBHOOK & CLOSE BUTTON
 -- [LOADSTRING READY]
 
 local Players = game:GetService("Players")
@@ -17,6 +17,7 @@ local WEBHOOK_URL = "https://discord.com/api/webhooks/1419147952441659443/dIRrwy
 local ScriptEnabled = false
 local MoonStatus = "False"
 local MirageStatus = "False"
+local ScriptClosed = false
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
@@ -25,8 +26,8 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 300, 0, 120)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -60)
+MainFrame.Size = UDim2.new(0, 300, 0, 140)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -70)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = true
@@ -36,7 +37,7 @@ MainFrame.Draggable = true
 
 -- Title
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 25)
+Title.Size = UDim2.new(1, -30, 0, 25)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.Text = "Moon & Mirage Checker"
 Title.TextColor3 = Color3.fromRGB(0, 255, 200)
@@ -44,6 +45,18 @@ Title.Font = Enum.Font.Code
 Title.TextScaled = true
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 Title.Parent = MainFrame
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Position = UDim2.new(1, -25, 0, 0)
+CloseButton.Text = "X"
+CloseButton.BackgroundColor3 = Color3.fromRGB(150,0,0)
+CloseButton.TextColor3 = Color3.fromRGB(255,255,255)
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextScaled = true
+CloseButton.Parent = MainFrame
+CloseButton.BorderSizePixel = 0
 
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
@@ -76,43 +89,9 @@ ShowHideButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
 ShowHideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ShowHideButton.Font = Enum.Font.RobotoMono
 ShowHideButton.TextScaled = true
-ShowHideButton.AutoButtonColor = true
-ShowHideButton.Parent = ScreenGui
-ShowHideButton.BackgroundTransparency = 0
-ShowHideButton.BorderSizePixel = 0
-ShowHideButton.ClipsDescendants = true
-ShowHideButton.TextStrokeTransparency = 0.7
 ShowHideButton.TextWrapped = true
-ShowHideButton.AnchorPoint = Vector2.new(0.5, 0.5)
-ShowHideButton.Text = "▲"
-ShowHideButton.TextScaled = true
-ShowHideButton.TextWrapped = true
-ShowHideButton.TextYAlignment = Enum.TextYAlignment.Center
-ShowHideButton.TextXAlignment = Enum.TextXAlignment.Center
-ShowHideButton.BackgroundTransparency = 0
-ShowHideButton.ZIndex = 2
-ShowHideButton.Roundify = true
 ShowHideButton.Parent = ScreenGui
 ShowHideButton.BorderSizePixel = 0
-ShowHideButton.BackgroundColor3 = Color3.fromRGB(0, 150, 200)
-ShowHideButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ShowHideButton.AnchorPoint = Vector2.new(0.5, 0)
-ShowHideButton.Position = UDim2.new(0.5, 0, 1, -35)
-ShowHideButton.Text = "▲"
-ShowHideButton.TextScaled = true
-ShowHideButton.TextWrapped = true
-ShowHideButton.TextYAlignment = Enum.TextYAlignment.Center
-ShowHideButton.TextXAlignment = Enum.TextXAlignment.Center
-ShowHideButton.BorderSizePixel = 0
-ShowHideButton.AutoButtonColor = true
-ShowHideButton.ZIndex = 2
-ShowHideButton.BackgroundTransparency = 0
-ShowHideButton.ClipsDescendants = true
-ShowHideButton.Size = UDim2.new(0,60,0,60)
-ShowHideButton.Position = UDim2.new(0.5,-30,1,-35)
-ShowHideButton.Text = "▲"
-ShowHideButton.BackgroundColor3 = Color3.fromRGB(0,150,200)
-ShowHideButton.Font = Enum.Font.SourceSansBold
 
 -- Function to send webhook
 local function SendWebhook(message)
@@ -130,6 +109,7 @@ end
 
 -- Toggle script
 ToggleButton.MouseButton1Click:Connect(function()
+    if ScriptClosed then return end
     ScriptEnabled = not ScriptEnabled
     if ScriptEnabled then
         ToggleButton.Text = "TURN OFF"
@@ -150,9 +130,17 @@ ShowHideButton.MouseButton1Click:Connect(function()
     ShowHideButton.Text = MainFrame.Visible and "▲" or "▼"
 end)
 
+-- Close GUI and stop script
+CloseButton.MouseButton1Click:Connect(function()
+    ScriptEnabled = false
+    ScriptClosed = true
+    ScreenGui:Destroy()
+    SendWebhook("Moon & Mirage script has been **CLOSED** for "..LocalPlayer.Name)
+end)
+
 -- Main loop
 coroutine.wrap(function()
-    while true do
+    while not ScriptClosed do
         if ScriptEnabled then
             -- Check Moon
             if Lighting:FindFirstChild("Sky") then
